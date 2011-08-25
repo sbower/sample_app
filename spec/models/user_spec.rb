@@ -3,7 +3,7 @@ require 'spec_helper'
 describe User do
   
   before(:each) do
-    @attr = {:name => "user", :email => "user@example.com", :password => "foobar", :password_confirmation => "foobar"}
+    @attr = {:name => "user", :email => "user1@example.com", :password => "foobar1234", :password_confirmation => "foobar1234"}
   end
   
   it "should create a new instance given a valid attribute" do
@@ -88,15 +88,52 @@ describe User do
   
   describe "password encryption" do
     before(:each) do
-      @user = User.new(@attr)
+      @user = User.create!(@attr)
     end
     
     it "should have an encrypted password attribute" do
       @user.should respond_to(:encrypted_password)
     end
     
+    it "should have an salt attribute" do
+      @user.should respond_to(:salt)
+    end
+    
     it "should not be blank" do
       @user.encrypted_password.should_not be_blank
     end
+    
+    describe "has_password? method" do
+      it "should exist" do
+        @user.should respond_to(:has_password?)
+      end
+      
+      it "should return true id the password match" do
+        @user.has_password?(@attr[:password]).should be_true
+      end
+      
+      it "should return false otherwise" do
+        @user.has_password?("invalid").should be_false
+      end
+    end
+    
+    describe "authenticate" do
+      it "should exits" do
+        User.should respond_to(:authenticate)
+      end
+      
+      it "should return nil on email/pass mismatch" do
+        User.authenticate(@attr[:email], "wrongo").should be_nil
+      end
+      
+      it "should return nil for email with no user" do
+        User.authenticate("baz@example.com", @attr[:password]).should be_nil
+      end
+      
+      it "should return the user on email/pass match" do
+        User.authenticate(@attr[:email], @attr[:password]).should == @user
+      end
+    end
+    
   end
 end
